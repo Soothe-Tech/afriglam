@@ -1,0 +1,26 @@
+type LogLevel = 'info' | 'warn' | 'error';
+
+const print = (level: LogLevel, message: string, meta?: Record<string, unknown>) => {
+  const payload = {
+    level,
+    message,
+    timestamp: new Date().toISOString(),
+    ...meta,
+  };
+  const line = JSON.stringify(payload);
+  if (level === 'error') {
+    console.error(line);
+    return;
+  }
+  if (level === 'warn') {
+    console.warn(line);
+    return;
+  }
+  console.log(line);
+};
+
+export const logger = {
+  info: (message: string, meta?: Record<string, unknown>) => print('info', message, meta),
+  warn: (message: string, meta?: Record<string, unknown>) => print('warn', message, meta),
+  error: (message: string, meta?: Record<string, unknown>) => print('error', message, meta),
+};

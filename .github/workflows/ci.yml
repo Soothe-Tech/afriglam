@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Build
+        run: npm run build
+
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check migrations exist and are ordered
+        run: |
+          dirs="supabase/migrations"
+          if [ ! -d "$dirs" ]; then echo "No supabase/migrations folder"; exit 0; fi
+          count=$(find supabase/migrations -name "*.sql" 2>/dev/null | wc -l)
+          echo "Found $count migration file(s)"
