@@ -15,7 +15,7 @@ export const StoreLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const category = search.trim() ? search.trim().toLowerCase() : 'all';
+    const category = search.trim() ? search.trim() : 'all';
     navigate(`/products/${category}`);
   };
 
@@ -48,7 +48,12 @@ export const StoreLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                   <div className="text-gray-500 flex items-center justify-center pl-4 pr-2">
                     <span className="material-symbols-outlined text-lg">search</span>
                   </div>
-                  <input value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-transparent border-none text-sm text-[#131614] dark:text-white placeholder:text-gray-500 focus:ring-0 h-full" placeholder="Search..." />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full bg-transparent border-none text-sm text-[#131614] dark:text-white placeholder:text-gray-500 focus:ring-0 h-full"
+                    placeholder="Search..."
+                  />
                 </div>
               </form>
               <div className="flex gap-2">
@@ -63,23 +68,26 @@ export const StoreLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                 )}
                 <Link to="/cart" className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-[#f1f3f2] dark:bg-surface-dark text-[#131614] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors relative">
                   <span className="material-symbols-outlined">shopping_cart</span>
-                  {itemCount > 0 && <span className="absolute top-0 right-0 h-5 min-w-5 px-1 bg-red-500 rounded-full border-2 border-white dark:border-surface-dark text-[10px] text-white flex items-center justify-center">{itemCount}</span>}
+                  {itemCount > 0 && (
+                    <span className="absolute top-0 right-0 h-5 min-w-5 px-1 bg-red-500 rounded-full border-2 border-white dark:border-surface-dark text-[10px] text-white flex items-center justify-center">
+                      {itemCount}
+                    </span>
+                  )}
                 </Link>
               </div>
             </div>
           </div>
         </header>
       )}
-      <main className="flex-grow w-full">
-        {children}
-      </main>
+      <main className="flex-grow w-full">{children}</main>
       {!isAuthPage && (
         <footer className="mt-auto border-t border-gray-200 dark:border-white/10 bg-white dark:bg-background-dark py-12 px-6">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-            <p className="text-gray-400 text-sm">© 2024 AfriGlam. All rights reserved.</p>
+            <p className="text-gray-400 text-sm">(c) 2024 AfriGlam. All rights reserved.</p>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-sm text-gray-500 hover:text-primary transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="text-sm text-gray-500 hover:text-primary transition-colors">Terms of Service</Link>
+              <Link to="/help" className="text-sm text-gray-500 hover:text-primary transition-colors">Help</Link>
             </div>
           </div>
         </footer>

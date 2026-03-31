@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { isRuntimeDemoMode, isSupabaseConfigured, supabase } from '../lib/supabase';
 
 type SignInArgs = {
   email: string;
@@ -27,14 +27,50 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-const ADMIN_EMAIL_SUFFIX = '@afriglam.com';
+const DEMO_AUTH_KEY = 'afriglam_demo_auth';
 
 const getAdminStatus = (user: User | null, roleFromProfile: string | null): boolean => {
   if (!user) return false;
   const explicitRole = roleFromProfile ?? user.user_metadata?.role;
-  if (explicitRole === 'ADMIN') return true;
-  return (user.email ?? '').toLowerCase().endsWith(ADMIN_EMAIL_SUFFIX);
+  return explicitRole === 'ADMIN';
+};
+
+const buildDemoSession = (args: { email: string; role: 'ADMIN' | 'CUSTOMER'; name?: string }) => {
+  const user = {
+    id: `demo-${args.role.toLowerCase()}-${args.email}`,
+    email: args.email,
+    user_metadata: {
+      full_name: args.name ?? args.email.split('@')[0],
+      name: args.name ?? args.email.split('@')[0],
+      role: args.role,
+    },
+    app_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+  } as unknown as User;
+
+  const session = {
+    access_token: `demo-token-${args.email}`,
+    token_type: 'bearer',
+    user,
+  } as unknown as Session;
+
+  return { user, session, role: args.role };
+};
+
+const loadDemoSession = () => {
+  const raw = localStorage.getItem(DEMO_AUTH_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { email: string; role: 'ADMIN' | 'CUSTOMER'; name?: string };
+    return buildDemoSession(parsed);
+  } catch {
+    return null;
+  }
+};
+
+const saveDemoSession = (payload: { email: string; role: 'ADMIN' | 'CUSTOMER'; name?: string }) => {
+  localStorage.setItem(DEMO_AUTH_KEY, JSON.stringify(payload));
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -44,6 +80,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const refreshProfileRole = async (userId: string | undefined) => {
+    if (isRuntimeDemoMode) {
+      const demo = loadDemoSession();
+      setProfileRole(demo?.role ?? null);
+      return;
+    }
+
     if (!userId || !supabase) {
       setProfileRole(null);
       return;
@@ -53,6 +95,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    if (isRuntimeDemoMode) {
+      const demo = loadDemoSession();
+      setSession(demo?.session ?? null);
+      setUser(demo?.user ?? null);
+      setProfileRole(demo?.role ?? null);
+      setLoading(false);
+      return;
+    }
+
     if (!isSupabaseConfigured || !supabase) {
       setLoading(false);
       return;
@@ -76,6 +127,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async ({ email, password }: SignInArgs) => {
+    if (isRuntimeDemoMode) {
+      if (!email || !password) return { error: 'Email and password are required.' };
+      const role = email.toLowerCase().includes('admin') ? 'ADMIN' : 'CUSTOMER';
+      const demo = buildDemoSession({ email, role });
+      saveDemoSession({ email, role });
+      setSession(demo.session);
+      setUser(demo.user);
+      setProfileRole(role);
+      return {};
+    }
+
     if (!supabase) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
@@ -83,6 +145,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async ({ email, password, name }: SignUpArgs) => {
+    if (isRuntimeDemoMode) {
+      if (!email || !password) return { error: 'Email and password are required.' };
+      const demo = buildDemoSession({ email, role: 'CUSTOMER', name });
+      saveDemoSession({ email, role: 'CUSTOMER', name });
+      setSession(demo.session);
+      setUser(demo.user);
+      setProfileRole('CUSTOMER');
+      return {};
+    }
+
     if (!supabase) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.signUp({
       email,
@@ -99,6 +171,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithProvider = async (provider: 'google' | 'apple') => {
+    if (isRuntimeDemoMode) {
+      const email = provider === 'google' ? 'google-demo@afriglam.local' : 'apple-demo@afriglam.local';
+      const demo = buildDemoSession({ email, role: 'CUSTOMER', name: `${provider} demo` });
+      saveDemoSession({ email, role: 'CUSTOMER', name: `${provider} demo` });
+      setSession(demo.session);
+      setUser(demo.user);
+      setProfileRole('CUSTOMER');
+      return {};
+    }
+
     if (!supabase) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -111,6 +193,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetPassword = async (email: string) => {
+    if (isRuntimeDemoMode) {
+      if (!email) return { error: 'Email is required.' };
+      return {};
+    }
+
     if (!supabase) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/login`,
@@ -120,6 +207,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    if (isRuntimeDemoMode) {
+      localStorage.removeItem(DEMO_AUTH_KEY);
+      setSession(null);
+      setUser(null);
+      setProfileRole(null);
+      return;
+    }
+
     if (!supabase) return;
     await supabase.auth.signOut();
   };

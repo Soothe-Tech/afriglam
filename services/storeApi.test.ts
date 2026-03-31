@@ -2,14 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { storeApi } from './storeApi';
 
 describe('storeApi', () => {
-  it('returns products from fallback source', async () => {
+  it('returns demo catalog products when no Supabase is configured', async () => {
     const result = await storeApi.getProducts('all');
+    expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBeGreaterThan(0);
   });
 
-  it('filters products by category in fallback mode', async () => {
+  it('filters demo catalog products by category when no Supabase', async () => {
     const result = await storeApi.getProducts('Braids');
-    expect(result.every((item) => item.category.toLowerCase() === 'braids')).toBe(true);
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.every((product) => product.category.toLowerCase().includes('braids'))).toBe(true);
+  });
+
+  it('returns a demo product by id when no Supabase', async () => {
+    const products = await storeApi.getProducts('all');
+    const result = await storeApi.getProductById(products[0].id);
+    expect(result?.id).toBe(products[0].id);
   });
 
   it('createCustomer fallback returns customer shape', async () => {

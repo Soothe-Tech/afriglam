@@ -1,9 +1,10 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signInWithProvider, authEnabled } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -11,6 +12,8 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+
+  const returnTo = (location.state as { from?: string } | null)?.from ?? '/feed';
 
   React.useEffect(() => {
     const savedEmail = localStorage.getItem('remembered_email');
@@ -36,7 +39,7 @@ const Login: React.FC = () => {
         }
         if (remember) localStorage.setItem('remembered_email', email);
         else localStorage.removeItem('remembered_email');
-        navigate('/feed');
+        navigate(returnTo);
       })
       .finally(() => setLoading(false));
   };
@@ -69,7 +72,7 @@ const Login: React.FC = () => {
                       type="email" 
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="titilope@example.com" 
+                      placeholder="email@example.com" 
                       className="w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     />
                     <span className="material-symbols-outlined absolute right-3 top-3.5 text-slate-400">mail</span>

@@ -1,16 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
+import type { PaymentStatus } from '../../types';
 import { badRequest, methodNotAllowed, unauthorized } from '../_utils/http';
-import { logger } from '../../lib/logger';
-import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import { attachRequestContext } from '../_utils/request';
+import { getRequiredServerEnv } from '../../lib/serverEnv';
+import { applyPaymentUpdate } from '../_utils/payments';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const request = attachRequestContext(req, res);
+
   if (req.method !== 'POST') {
     return methodNotAllowed(res);
   }
 
   const signature = String(req.headers['x-webhook-signature'] ?? '');
-  const secret = process.env.PAYMENT_WEBHOOK_SECRET;
+  const secret = getRequiredServerEnv('PAYMENT_WEBHOOK_SECRET');
   if (!secret) {
     return unauthorized(res, 'Webhook secret is not configured');
   }
@@ -25,52 +29,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const eventId = String(req.body?.eventId ?? '');
   const intentId = String(req.body?.intentId ?? '');
-  const status = String(req.body?.status ?? '');
+  const status = String(req.body?.status ?? '') as PaymentStatus;
   if (!eventId || !intentId || !intentId.startsWith('intent_') || !['succeeded', 'failed'].includes(status)) {
     return badRequest(res, 'Invalid webhook payload');
   }
 
   try {
-    if (supabaseAdmin) {
-      const { data: existingEvent } = await supabaseAdmin
-        .from('webhook_events')
-        .select('id')
-        .eq('event_id', eventId)
-        .maybeSingle();
+    const result = await applyPaymentUpdate({
+      eventId,
+      intentId,
+      status,
+      source: 'webhooks/payments',
+      rawPayload: req.body ?? {},
+      orderId: String(req.body?.orderId ?? '') || null,
+      providerReference: String(req.body?.providerReference ?? '') || null,
+    });
 
-      if (existingEvent?.id) {
-        return res.status(200).json({ ok: true, message: 'Event already processed' });
-      }
-
-      await supabaseAdmin.from('webhook_events').insert({
-        event_id: eventId,
-        payment_intent_id: intentId,
-        payload: req.body,
-      });
-
-      await supabaseAdmin
-        .from('payments')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('payment_intent_id', intentId);
-
-      if (status === 'succeeded') {
-        const { data: payment } = await supabaseAdmin
-          .from('payments')
-          .select('order_id')
-          .eq('payment_intent_id', intentId)
-          .maybeSingle();
-        if (payment?.order_id) {
-          await supabaseAdmin
-            .from('orders')
-            .update({ status: 'Confirmed', updated_at: new Date().toISOString() })
-            .eq('id', payment.order_id);
-        }
-      }
+    if (result.ok && result.deduplicated) {
+      return res.status(200).json({ ok: true, message: 'Event already processed' });
     }
 
     return res.status(200).json({ ok: true, message: 'Webhook accepted' });
   } catch (error) {
-    logger.error('payment_webhook_failed', { error: String(error), eventId, intentId });
+    request.log('error', 'payment_webhook_failed', { error: String(error), eventId, intentId });
     return res.status(500).json({ ok: false, message: 'Webhook processing failed' });
   }
 }

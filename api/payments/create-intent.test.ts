@@ -18,54 +18,58 @@ const createRes = () => {
 
 describe('create-intent api', () => {
   it('returns 405 for non-POST', async () => {
-    const req: any = { method: 'GET', body: {} };
+    const req: any = { method: 'GET', headers: {}, body: {} };
     const res = createRes();
     await handler(req, res);
     expect(res.statusCode).toBe(405);
   });
 
-  it('returns 400 for missing customer fields or empty cart', async () => {
-    const req: any = { method: 'POST', body: { currency: 'PLN', amount: 100 } };
+  it('returns 503 when checkout database configuration is missing', async () => {
+    const req: any = { method: 'POST', headers: {}, body: { currency: 'PLN' } };
     const res = createRes();
     await handler(req, res);
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(503);
   });
 
-  it('returns 200 for valid payload when no Supabase', async () => {
+  it('returns 503 for valid payload when no Supabase', async () => {
     const req: any = {
       method: 'POST',
+      headers: {},
       body: {
         currency: 'PLN',
-        amount: 100,
         email: 'test@example.com',
-        fullName: 'Test User',
-        address: '123 Main St',
-        city: 'Warsaw',
-        items: [{ product_id: 'a1b2c3d4-e5f6-4789-a012-345678901234', quantity: 1, unit_price_ngn: 0, unit_price_pln: 100 }],
+        shippingAddress: {
+          fullName: 'Test User',
+          address: '123 Main St',
+          city: 'Warsaw',
+          country: 'Poland',
+        },
+        items: [{ product_id: 'a1b2c3d4-e5f6-4789-a012-345678901234', quantity: 1 }],
       },
     };
     const res = createRes();
     await handler(req, res);
-    expect(res.statusCode).toBe(200);
-    expect((res.payload as { ok?: boolean; intentId?: string }).ok).toBe(true);
-    expect((res.payload as { intentId?: string }).intentId).toMatch(/^intent_/);
+    expect(res.statusCode).toBe(503);
   });
 
-  it('returns 400 when amount does not match cart total', async () => {
+  it('returns 503 before attempting cart validation when no Supabase is configured', async () => {
     const req: any = {
       method: 'POST',
+      headers: {},
       body: {
         currency: 'PLN',
-        amount: 50,
         email: 'test@example.com',
-        fullName: 'Test User',
-        address: '123 Main St',
-        city: 'Warsaw',
-        items: [{ product_id: 'a1b2c3d4-e5f6-4789-a012-345678901234', quantity: 1, unit_price_ngn: 0, unit_price_pln: 100 }],
+        shippingAddress: {
+          fullName: 'Test User',
+          address: '123 Main St',
+          city: 'Warsaw',
+          country: 'Poland',
+        },
+        items: [{ product_id: 'a1b2c3d4-e5f6-4789-a012-345678901234', quantity: 1 }],
       },
     };
     const res = createRes();
     await handler(req, res);
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(503);
   });
 });

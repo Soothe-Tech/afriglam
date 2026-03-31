@@ -11,9 +11,16 @@ const Customers: React.FC = () => {
   const [newEmail, setNewEmail] = React.useState('');
   const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | null>(null);
   const [statusMessage, setStatusMessage] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+
   React.useEffect(() => {
-    storeApi.getCustomers().then((result) => setCustomers(result));
+    setLoading(true);
+    storeApi
+      .getCustomers()
+      .then((result) => setCustomers(result))
+      .finally(() => setLoading(false));
   }, []);
+
   const rows = customers.filter((customer) => {
     const q = query.toLowerCase();
     return !q || customer.name.toLowerCase().includes(q) || customer.email.toLowerCase().includes(q);
@@ -51,62 +58,64 @@ const Customers: React.FC = () => {
       {statusMessage && <p className="text-sm text-slate-500">{statusMessage}</p>}
 
       <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl shadow-sm flex flex-col overflow-hidden">
-        {/* Toolbar */}
         <div className="p-4 border-b border-slate-100 dark:border-white/5 flex gap-4">
-           <div className="flex-1 max-w-md relative">
-             <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400">search</span>
-             <input value={query} onChange={(e) => setQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-admin-primary" placeholder="Search by name, email..." />
-           </div>
+          <div className="flex-1 max-w-md relative">
+            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400">search</span>
+            <input value={query} onChange={(e) => setQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-admin-primary" placeholder="Search by name, email..." />
+          </div>
         </div>
 
-        {/* Table */}
         <div className="flex-1 overflow-auto">
+          {loading ? (
+            <div className="p-8 text-sm text-slate-500">Loading customers...</div>
+          ) : rows.length === 0 ? (
+            <div className="p-8 text-sm text-slate-500">No customers match the current search.</div>
+          ) : (
             <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="text-xs font-semibold uppercase text-slate-500 bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 sticky top-0">
+              <thead className="text-xs font-semibold uppercase text-slate-500 bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 sticky top-0">
                 <tr>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Contact</th>
-                <th className="px-6 py-4 text-center">Orders</th>
-                <th className="px-6 py-4 text-right">Total Spent</th>
-                <th className="px-6 py-4">Last Active</th>
-                <th className="px-6 py-4 text-center">Actions</th>
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Contact</th>
+                  <th className="px-6 py-4 text-center">Orders</th>
+                  <th className="px-6 py-4 text-right">Total Spent</th>
+                  <th className="px-6 py-4">Last Active</th>
+                  <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {rows.map((customer) => (
-                <tr key={customer.id} className="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  <tr key={customer.id} className="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                            <img src={customer.avatar} alt="" className="size-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"/>
-                            <div className="flex flex-col">
-                                <span className="font-bold text-slate-900 dark:text-white">{customer.name}</span>
-                                <span className="text-xs text-slate-500">ID: {customer.id}</span>
-                            </div>
+                      <div className="flex items-center gap-3">
+                        {customer.avatar ? (
+                          <img src={customer.avatar} alt="" className="size-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800" />
+                        ) : (
+                          <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-slate-800" aria-hidden>
+                            <span className="material-symbols-outlined text-slate-500 text-xl">person</span>
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 dark:text-white">{customer.name}</span>
+                          <span className="text-xs text-slate-500">ID: {customer.id}</span>
                         </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
-                        {customer.email}
-                    </td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{customer.email}</td>
                     <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white">
-                             {customer.totalOrders}
-                        </span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white">{customer.totalOrders}</span>
                     </td>
-                    <td className="px-6 py-4 text-right font-mono text-slate-900 dark:text-white font-medium">
-                        {customer.totalSpent_pln} PLN
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">
-                        {customer.lastActive}
-                    </td>
+                    <td className="px-6 py-4 text-right font-mono text-slate-900 dark:text-white font-medium">{customer.totalSpent_pln} PLN</td>
+                    <td className="px-6 py-4 text-slate-500 text-xs">{customer.lastActive}</td>
                     <td className="px-6 py-4 text-center">
-                         <button onClick={() => setSelectedCustomer(customer)} className="text-slate-400 hover:text-admin-primary transition-colors" aria-label={`Open actions for ${customer.name}`}>
-                            <span className="material-symbols-outlined">more_vert</span>
-                        </button>
+                      <button onClick={() => setSelectedCustomer(customer)} className="text-slate-400 hover:text-admin-primary transition-colors" aria-label={`Open actions for ${customer.name}`}>
+                        <span className="material-symbols-outlined">more_vert</span>
+                      </button>
                     </td>
-                </tr>
+                  </tr>
                 ))}
-            </tbody>
+              </tbody>
             </table>
+          )}
         </div>
       </div>
 
@@ -131,9 +140,7 @@ const Customers: React.FC = () => {
         isOpen={Boolean(selectedCustomer)}
         onClose={() => setSelectedCustomer(null)}
         title={selectedCustomer ? selectedCustomer.name : 'Customer'}
-        actions={
-          <button onClick={() => setSelectedCustomer(null)} className="px-4 py-2 rounded-lg bg-admin-primary hover:bg-emerald-600 text-white transition-colors text-sm font-bold">Close</button>
-        }
+        actions={<button onClick={() => setSelectedCustomer(null)} className="px-4 py-2 rounded-lg bg-admin-primary hover:bg-emerald-600 text-white transition-colors text-sm font-bold">Close</button>}
       >
         {selectedCustomer && (
           <div className="space-y-2">

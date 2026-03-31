@@ -72,7 +72,7 @@ const Signup: React.FC = () => {
                     type="text" 
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Amara Okafor" 
+                    placeholder="Full name" 
                     className="w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                   <span className="material-symbols-outlined absolute right-3 top-3.5 text-slate-400">person</span>
@@ -86,7 +86,7 @@ const Signup: React.FC = () => {
                     type="email" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com" 
+                    placeholder="email@example.com" 
                     className="w-full px-4 py-3 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                   <span className="material-symbols-outlined absolute right-3 top-3.5 text-slate-400">mail</span>

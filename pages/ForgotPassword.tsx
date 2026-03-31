@@ -37,7 +37,7 @@ const ForgotPassword: React.FC = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-lg border border-slate-200 dark:border-white/10 px-4 py-3"
-          placeholder="name@example.com"
+          placeholder="email@example.com"
           aria-label="Email address"
         />
         {error && <p className="text-sm text-red-500">{error}</p>}

@@ -15,15 +15,27 @@ This repository is a Vite React storefront/admin app prepared for:
 2. Copy env template:
    - duplicate `.env.example` to `.env.local`
 3. Set values in `.env.local`:
-   - `VITE_GEMINI_API_KEY`
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
+   - Client-safe:
+     - `VITE_SUPABASE_URL`
+     - `VITE_SUPABASE_ANON_KEY`
+     - `VITE_GEMINI_API_KEY` (optional)
+   - Server-only:
+     - `SUPABASE_URL`
+     - `SUPABASE_SERVICE_ROLE_KEY`
+     - `APP_ORIGIN`
+     - `PAYMENT_WEBHOOK_SECRET`
+     - `PAYSTACK_SECRET_KEY`
+     - `STRIPE_SECRET_KEY`
+     - `STRIPE_WEBHOOK_SECRET`
 4. Run:
    - `npm run dev`
 
 ## Build and test
 - Build: `npm run build`
 - Unit/integration tests: `npm run test:run`
+- Browser smoke (demo mode, uses local Edge/Chrome channel by default): `npm run smoke`
+  - Uses Playwright `webServer` to start `npm run dev -- --host --port 4173`
+  - If you prefer bundled Chromium instead of a system browser, run `npx playwright install chromium` once.
 
 ## Supabase setup
 Apply migrations in order:
@@ -39,12 +51,17 @@ This project includes `vercel.json` with:
 
 Set env vars in Vercel:
 - Client-safe:
-  - `VITE_GEMINI_API_KEY`
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_GEMINI_API_KEY` (optional)
 - Server-only:
+  - `SUPABASE_URL`
   - `SUPABASE_SERVICE_ROLE_KEY`
+  - `APP_ORIGIN`
   - `PAYMENT_WEBHOOK_SECRET`
+  - `PAYSTACK_SECRET_KEY`
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
 
 ## API endpoints (serverless)
 - `POST /api/admin/export-analytics`
@@ -52,5 +69,6 @@ Set env vars in Vercel:
 - `POST /api/webhooks/payments`
 
 ## Notes
-- Supabase auth fallback mode is used when env keys are missing.
-- Frontend data service falls back to local constants when Supabase tables are unavailable.
+- Production builds fail fast when required client env vars are missing.
+- Checkout totals are computed on the server from the product catalog instead of client-sent prices.
+- Non-production environments can still run in a limited demo mode when browser Supabase config is absent.

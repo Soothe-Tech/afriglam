@@ -1,6 +1,6 @@
-import { PRODUCTS, RECENT_ORDERS, BOOKINGS, CUSTOMERS } from '../constants';
 import type { Booking, Customer, Order, Product } from '../types';
 import { supabase } from '../lib/supabase';
+import { BOOKINGS, CUSTOMERS, PRODUCTS, RECENT_ORDERS } from '../constants';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -16,7 +16,7 @@ export const storeApi = {
 
     await delay(150);
     if (!category || category === 'all') return PRODUCTS;
-    return PRODUCTS.filter((product) => product.category.toLowerCase() === category.toLowerCase());
+    return PRODUCTS.filter((product) => product.category.toLowerCase().includes(category.toLowerCase()));
   },
 
   async getProductById(id: string): Promise<Product | null> {
@@ -55,6 +55,7 @@ export const storeApi = {
         };
       });
     }
+    await delay(120);
     return RECENT_ORDERS;
   },
 
@@ -74,6 +75,7 @@ export const storeApi = {
         }));
       }
     }
+    await delay(120);
     return BOOKINGS;
   },
 
@@ -102,6 +104,7 @@ export const storeApi = {
       });
       return merged.map(({ created_at: _, ...c }) => c as Customer);
     }
+    await delay(120);
     return CUSTOMERS;
   },
 

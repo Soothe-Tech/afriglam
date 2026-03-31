@@ -8,18 +8,22 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "smoke": "playwright test",
+    "smoke:headed": "playwright test --headed"
   },
   "dependencies": {
     "@google/genai": "^1.42.0",
     "@supabase/supabase-js": "^2.97.0",
+    "raw-body": "^2.5.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0",
-    "stripe": "^17.5.0",
-    "raw-body": "^2.5.2"
+    "stripe": "^17.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.14.0",

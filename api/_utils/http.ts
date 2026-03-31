@@ -16,6 +16,10 @@ export const unauthorized = (res: VercelResponse, message = 'Unauthorized') => {
   return json(res, 401, { ok: false, message });
 };
 
+export const forbidden = (res: VercelResponse, message = 'Forbidden') => {
+  return json(res, 403, { ok: false, message });
+};
+
 export const serverError = (res: VercelResponse, message = 'Internal server error') => {
   return json(res, 500, { ok: false, message });
 };

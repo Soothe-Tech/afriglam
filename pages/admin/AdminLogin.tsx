@@ -49,7 +49,7 @@ const AdminLogin: React.FC = () => {
           <p className="text-sm font-medium text-admin-primary uppercase tracking-widest mb-4">Admin Portal</p>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-900/30 border border-emerald-500/20 text-emerald-500 text-xs font-medium">
             <span className="material-symbols-outlined text-[14px]">lock</span>
-            <span>256-bit Secure SSL Connection</span>
+            <span>Secure admin access</span>
           </div>
         </div>
 
@@ -66,7 +66,7 @@ const AdminLogin: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 rounded-lg border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-black/20 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-admin-primary focus:border-transparent transition-all shadow-sm sm:text-sm"
                   type="email"
-                  placeholder="admin@afriglam.com"
+                  placeholder="admin@yourdomain.com"
                 />
               </div>
             </div>
@@ -81,13 +81,13 @@ const AdminLogin: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 rounded-lg border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-black/20 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-admin-primary focus:border-transparent transition-all shadow-sm sm:text-sm"
                   type="password"
-                  placeholder="••••••••••••"
+                  placeholder="Enter your password"
                 />
               </div>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <button disabled={loading} type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-admin-primary hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-admin-primary transition-all duration-200 disabled:opacity-60">
-              Sign in to Dashboard
+              {loading ? 'Signing in...' : 'Sign in to Dashboard'}
             </button>
           </form>
         </div>

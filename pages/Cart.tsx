@@ -22,11 +22,18 @@ const Cart: React.FC = () => {
           <div className="rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden">
             {items.map((item) => (
               <div key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 border-b border-slate-100 dark:border-white/5 last:border-b-0">
-                <img src={item.image} alt={item.name} className="w-24 h-24 rounded-lg object-cover" />
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="w-24 h-24 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-24 h-24 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center" aria-hidden>
+                    <span className="material-symbols-outlined text-slate-400">image</span>
+                  </div>
+                )}
                 <div className="flex-1">
                   <h3 className="font-bold text-slate-900 dark:text-white">{item.name}</h3>
                   <p className="text-xs text-slate-500">{item.category}</p>
-                  <p className="font-mono text-primary font-semibold mt-1">{item.price_pln} PLN / ₦{item.price_ngn.toLocaleString()}</p>
+                  <p className="font-mono text-primary font-semibold mt-1">{item.price_pln} PLN / NGN {item.price_ngn.toLocaleString()}</p>
+                  {item.selectedColor && <p className="text-xs text-slate-500 mt-1">Color: {item.selectedColor}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -45,10 +52,7 @@ const Cart: React.FC = () => {
                     +
                   </button>
                 </div>
-                <button
-                  onClick={() => removeFromCart(item.id)}
-                  className="text-red-500 text-sm font-semibold"
-                >
+                <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-sm font-semibold">
                   Remove
                 </button>
               </div>
@@ -57,7 +61,7 @@ const Cart: React.FC = () => {
 
           <div className="rounded-xl border border-slate-200 dark:border-white/10 p-6 space-y-2">
             <p className="text-slate-600 dark:text-slate-300">Subtotal (PLN): <span className="font-mono font-bold">{subtotalPln.toFixed(2)} PLN</span></p>
-            <p className="text-slate-600 dark:text-slate-300">Subtotal (NGN): <span className="font-mono font-bold">₦{subtotalNgn.toLocaleString()}</span></p>
+            <p className="text-slate-600 dark:text-slate-300">Subtotal (NGN): <span className="font-mono font-bold">NGN {subtotalNgn.toLocaleString()}</span></p>
             <button
               onClick={() => navigate('/checkout')}
               className="mt-4 px-6 py-3 rounded-full bg-primary text-white font-bold hover:bg-primary-hover transition-colors"

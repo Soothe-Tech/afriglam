@@ -19,21 +19,21 @@ const createRes = () => {
 
 describe('confirm-intent api', () => {
   it('returns 405 for non-POST', async () => {
-    const req = { method: 'GET' };
+    const req = { method: 'GET', headers: {} };
     const res = createRes();
     await handler(req as any, res as any);
     expect(res.statusCode).toBe(405);
   });
 
   it('returns 400 for invalid intent id', async () => {
-    const req = { method: 'POST', body: { intentId: 'bad' } };
+    const req = { method: 'POST', headers: {}, body: { intentId: 'bad' } };
     const res = createRes();
     await handler(req as any, res as any);
     expect(res.statusCode).toBe(400);
   });
 
-  it('returns 200 for valid intent id', async () => {
-    const req = { method: 'POST', body: { intentId: 'intent_123', orderId: '' } };
+  it('returns 200 for valid intent id in demo mode', async () => {
+    const req = { method: 'POST', headers: {}, body: { intentId: 'intent_123', orderId: '' } };
     const res = createRes();
     await handler(req as any, res as any);
     expect(res.statusCode).toBe(200);

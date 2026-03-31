@@ -1,3 +1,9 @@
+export type Market = 'Poland' | 'Nigeria';
+export type Currency = 'PLN' | 'NGN';
+export type OrderStatus = 'Confirmed' | 'Processing' | 'In Transit' | 'Completed' | 'Cancelled';
+export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
+export type BookingStatus = 'Confirmed' | 'Pending' | 'Completed';
+
 export interface Product {
   id: string;
   name: string;
@@ -23,10 +29,10 @@ export interface Order {
   };
   items: string;
   date: string;
-  market: 'Poland' | 'Nigeria';
+  market: Market;
   total_ngn: number;
   total_pln: number;
-  status: 'Confirmed' | 'Processing' | 'In Transit' | 'Completed' | 'Cancelled';
+  status: OrderStatus;
 }
 
 export interface CartItem extends Product {
@@ -55,7 +61,7 @@ export interface Booking {
   stylist: string;
   date: string;
   time: string;
-  status: 'Confirmed' | 'Pending' | 'Completed';
+  status: BookingStatus;
   avatar: string;
 }
 
@@ -67,4 +73,27 @@ export interface Customer {
   totalSpent_pln: number;
   lastActive: string;
   avatar: string;
+}
+
+export interface CheckoutItemInput {
+  product_id: string;
+  quantity: number;
+}
+
+export interface CheckoutAddressInput {
+  fullName: string;
+  address: string;
+  city: string;
+  state?: string;
+  postalCode?: string;
+  country: string;
+  phone?: string;
+}
+
+export interface CreatePaymentIntentPayload {
+  currency: Currency;
+  email: string;
+  shippingAddress: CheckoutAddressInput;
+  billingAddress?: CheckoutAddressInput;
+  items: CheckoutItemInput[];
 }

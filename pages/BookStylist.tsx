@@ -67,7 +67,7 @@ const BookStylist: React.FC = () => {
               type="text"
               value={stylist}
               onChange={(e) => setStylist(e.target.value)}
-              placeholder="e.g. Amara O."
+              placeholder="Preferred stylist"
               className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-surface-dark px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>

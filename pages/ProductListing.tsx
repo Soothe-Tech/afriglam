@@ -71,11 +71,17 @@ const ProductListing: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filtered.map((product) => (
           <div key={product.id} className="group rounded-xl border border-slate-100 dark:border-white/10 overflow-hidden bg-white dark:bg-white/5">
-            <img src={product.image} alt={product.name} className="w-full aspect-[3/4] object-cover" />
+            {product.image ? (
+              <img src={product.image} alt={product.name} className="w-full aspect-[3/4] object-cover" />
+            ) : (
+              <div className="w-full aspect-[3/4] bg-slate-200 dark:bg-slate-700 flex items-center justify-center" aria-hidden>
+                <span className="material-symbols-outlined text-4xl text-slate-400">image</span>
+              </div>
+            )}
             <div className="p-4 space-y-2">
               <h3 className="font-serif text-lg text-slate-900 dark:text-white">{product.name}</h3>
               <p className="text-xs text-slate-500">{product.category}</p>
-              <p className="font-mono font-bold text-primary">₦{product.price_ngn.toLocaleString()} / {product.price_pln} PLN</p>
+              <p className="font-mono font-bold text-primary">NGN {product.price_ngn.toLocaleString()} / {product.price_pln} PLN</p>
               <Link
                 to={`/product/${product.id}`}
                 className="inline-flex mt-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-bold hover:bg-primary-hover transition-colors"

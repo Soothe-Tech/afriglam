@@ -2,19 +2,22 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
 import getRawBody from 'raw-body';
 import { methodNotAllowed, unauthorized, badRequest } from '../_utils/http';
-import { logger } from '../../lib/logger';
-import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import { attachRequestContext } from '../_utils/request';
+import { getRequiredServerEnv } from '../../lib/serverEnv';
+import { applyPaymentUpdate } from '../_utils/payments';
 
 export const config = {
   api: { bodyParser: false },
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const request = attachRequestContext(req, res);
+
   if (req.method !== 'POST') {
     return methodNotAllowed(res);
   }
 
-  const secret = process.env.PAYSTACK_SECRET_KEY;
+  const secret = getRequiredServerEnv('PAYSTACK_WEBHOOK_SECRET') ?? getRequiredServerEnv('PAYSTACK_SECRET_KEY');
   if (!secret) {
     return unauthorized(res, 'Paystack secret is not configured');
   }
@@ -27,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       rawBody = await getRawBody(req, { limit: '1mb' });
     } catch (e) {
-      logger.warn('paystack_webhook_raw_body_failed', { error: String(e) });
+      request.log('warn', 'paystack_webhook_raw_body_failed', { error: String(e) });
       return badRequest(res, 'Invalid body');
     }
   }
@@ -58,50 +61,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    if (supabaseAdmin) {
-      const eventIdForIdempotency = `paystack_${eventId || reference}`;
-      const { data: existingEvent } = await supabaseAdmin
-        .from('webhook_events')
-        .select('id')
-        .eq('event_id', eventIdForIdempotency)
-        .maybeSingle();
+    const result = await applyPaymentUpdate({
+      eventId: `paystack_${eventId || reference}`,
+      intentId: reference,
+      status: 'succeeded',
+      providerReference: reference,
+      source: 'webhooks/paystack',
+      rawPayload: payload as unknown as Record<string, unknown>,
+    });
 
-      if (existingEvent?.id) {
-        return res.status(200).json({ ok: true, message: 'Event already processed' });
-      }
-
-      await supabaseAdmin.from('webhook_events').insert({
-        event_id: eventIdForIdempotency,
-        payment_intent_id: reference,
-        payload: payload as unknown as Record<string, unknown>,
-      });
-
-      await supabaseAdmin
-        .from('payments')
-        .update({
-          status: 'succeeded',
-          provider_reference: reference,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('payment_intent_id', reference);
-
-      const { data: payment } = await supabaseAdmin
-        .from('payments')
-        .select('order_id')
-        .eq('payment_intent_id', reference)
-        .maybeSingle();
-
-      if (payment?.order_id) {
-        await supabaseAdmin
-          .from('orders')
-          .update({ status: 'Confirmed', updated_at: new Date().toISOString() })
-          .eq('id', payment.order_id);
-      }
+    if (result.ok && result.deduplicated) {
+      return res.status(200).json({ ok: true, message: 'Event already processed' });
     }
 
     return res.status(200).json({ ok: true, message: 'Webhook accepted' });
   } catch (error) {
-    logger.error('paystack_webhook_failed', { error: String(error), reference });
+    request.log('error', 'paystack_webhook_failed', { error: String(error), reference });
     return res.status(500).json({ ok: false, message: 'Webhook processing failed' });
   }
 }

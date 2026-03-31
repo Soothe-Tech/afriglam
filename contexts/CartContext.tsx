@@ -15,7 +15,19 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    const raw = localStorage.getItem('afriglam_cart');
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw) as CartItem[];
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('afriglam_cart', JSON.stringify(items));
+  }, [items]);
 
   const addToCart = (product: Product, quantity = 1, selectedColor?: string) => {
     setItems((prev) => {
@@ -36,7 +48,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateQuantity = (productId: string, quantity: number) => {
     setItems((prev) =>
       prev
-        .map((item) => (item.id === productId ? { ...item, quantity: Math.max(1, quantity) } : item))
+        .map((item) => (item.id === productId ? { ...item, quantity } : item))
         .filter((item) => item.quantity > 0)
     );
   };

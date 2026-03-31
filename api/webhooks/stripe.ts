@@ -2,19 +2,22 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import getRawBody from 'raw-body';
 import { methodNotAllowed, unauthorized, badRequest } from '../_utils/http';
-import { logger } from '../../lib/logger';
-import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import { attachRequestContext } from '../_utils/request';
+import { getRequiredServerEnv } from '../../lib/serverEnv';
+import { applyPaymentUpdate } from '../_utils/payments';
 
 export const config = {
   api: { bodyParser: false },
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const request = attachRequestContext(req, res);
+
   if (req.method !== 'POST') {
     return methodNotAllowed(res);
   }
 
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = getRequiredServerEnv('STRIPE_WEBHOOK_SECRET');
   if (!webhookSecret) {
     return unauthorized(res, 'Stripe webhook secret is not configured');
   }
@@ -27,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       rawBody = await getRawBody(req, { limit: '1mb' });
     } catch (e) {
-      logger.warn('stripe_webhook_raw_body_failed', { error: String(e) });
+      request.log('warn', 'stripe_webhook_raw_body_failed', { error: String(e) });
       return badRequest(res, 'Invalid body');
     }
   }
@@ -38,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     event = Stripe.webhooks.constructEvent(rawBody, signature, webhookSecret) as Stripe.Event;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn('stripe_webhook_signature_invalid', { error: message });
+    request.log('warn', 'stripe_webhook_signature_invalid', { error: message });
     return unauthorized(res, 'Invalid Stripe signature');
   }
 
@@ -51,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const id = meta?.intentId ?? intentId;
     const oid = meta?.orderId ?? orderId;
     if (!id || !id.startsWith('intent_')) {
-      logger.warn('stripe_webhook_missing_metadata', { eventId: event.id });
+      request.log('warn', 'stripe_webhook_missing_metadata', { eventId: event.id });
       return res.status(200).json({ ok: true, message: 'No intentId in metadata' });
     }
     const ref =
@@ -67,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const id = (pi.metadata as { intentId?: string })?.intentId ?? intentId;
     const oid = (pi.metadata as { orderId?: string })?.orderId ?? orderId;
     if (!id || !id.startsWith('intent_')) {
-      logger.warn('stripe_webhook_missing_metadata', { eventId: event.id });
+      request.log('warn', 'stripe_webhook_missing_metadata', { eventId: event.id });
       return res.status(200).json({ ok: true, message: 'No intentId in metadata' });
     }
     await applySuccess(id, oid, event.id, pi.id);
@@ -83,36 +86,13 @@ async function applySuccess(
   stripeEventId: string,
   providerRef: string | null
 ) {
-  if (!supabaseAdmin) return;
-
-  const eventIdForIdempotency = `stripe_${stripeEventId}`;
-  const { data: existingEvent } = await supabaseAdmin
-    .from('webhook_events')
-    .select('id')
-    .eq('event_id', eventIdForIdempotency)
-    .maybeSingle();
-
-  if (existingEvent?.id) return;
-
-  await supabaseAdmin.from('webhook_events').insert({
-    event_id: eventIdForIdempotency,
-    payment_intent_id: intentId,
-    payload: { stripeEventId, providerRef, orderId },
+  await applyPaymentUpdate({
+    eventId: `stripe_${stripeEventId}`,
+    intentId,
+    status: 'succeeded',
+    providerReference: providerRef,
+    source: 'webhooks/stripe',
+    rawPayload: { stripeEventId, providerRef, orderId },
+    orderId,
   });
-
-  await supabaseAdmin
-    .from('payments')
-    .update({
-      status: 'succeeded',
-      ...(providerRef ? { provider_reference: providerRef } : {}),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('payment_intent_id', intentId);
-
-  if (orderId) {
-    await supabaseAdmin
-      .from('orders')
-      .update({ status: 'Confirmed', updated_at: new Date().toISOString() })
-      .eq('id', orderId);
-  }
 }
