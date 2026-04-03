@@ -9,8 +9,10 @@ const Splash: React.FC = () => {
     const loadResources = async () => {
       // 1. Critical Images to Preload (Onboarding & Country Select backgrounds)
       const imagesToPreload = [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuD2CQkVa9DPaVJclGCyLwSnhT5h18U2pm7Bd630-MCpZGxLDB2fR4Edy_CxfXpb6Aa7Ax__4R2NWg-QWdorwKw1WSaOpn5ftvZ3sVOL9YKzMyLRwuEjdeh-T21yh3ikGPMEG8TsJSufq4eB7Cz_QTo3CW1d8IGQVEs5EE4-CYS3Xlahzy2fsHtjEzZt7hRCjgsdQNAOCAuZ8KAmOW4E3NSdYl7gB-Fe5B5nCmAe8hjs54CB6w4aFukSjuz6wk3mwPcoQ6jrOHYysbg', // Onboarding Desktop
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAfyk47ta1M50hrMyUqVfsJ9ukXaHl5M8lWbYz6xyAx8PR8Hj6TrgV-qIS1SA0OQqFDhm5L2zlBkKAJA8_YysLhxWveZV_XXIrukYhAJ3yXFKxag5x6SQZlH0on8j-AyKUkn_mNwJSflvNuS8FDwbdIJj5l_6rmTq0CAlpTrOPmxxjxOrgd-rBYeUf_0i4t8iQb_RFBjtbOLTCIBpYqqvKsU8gyOERkkHZppUE5CWLPNW4t0BZzpKETkYslRv91GZlA8r63YONZ5TU', // Onboarding Mobile
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuD2CQkVa9DPaVJclGCyLwSnhT5h18U2pm7Bd630-MCpZGxLDB2fR4Edy_CxfXpb6Aa7Ax__4R2NWg-QWdorwKw1WSaOpn5ftvZ3sVOL9YKzMyLRwuEjdeh-T21yh3ikGPMEG8TsJSufq4eB7Cz_QTo3CW1d8IGQVEs5EE4-CYS3Xlahzy2fsHtjEzZt7hRCjgsdQNAOCAuZ8KAmOW4E3NSdYl7gB-Fe5B5nCmAe8hjs54CB6w4aFukSjuz6wk3mwPcoQ6jrOHYysbg', // Onboarding Desktop 1
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuAfyk47ta1M50hrMyUqVfsJ9ukXaHl5M8lWbYz6xyAx8PR8Hj6TrgV-qIS1SA0OQqFDhm5L2zlBkKAJA8_YysLhxWveZV_XXIrukYhAJ3yXFKxag5x6SQZlH0on8j-AyKUkn_mNwJSflvNuS8FDwbdIJj5l_6rmTq0CAlpTrOPmxxjxOrgd-rBYeUf_0i4t8iQb_RFBjtbOLTCIBpYqqvKsU8gyOERkkHZppUE5CWLPNW4t0BZzpKETkYslRv91GZlA8r63YONZ5TU', // Onboarding Mobile 1
+        'https://images.unsplash.com/photo-1595959183082-7b570b7e08e2?q=80&w=2070&auto=format&fit=crop', // Onboarding Slide 2
+        'https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?q=80&w=2070&auto=format&fit=crop', // Onboarding Slide 3
         'https://lh3.googleusercontent.com/aida-public/AB6AXuAZUn_mf_UgWa7aQyFeL0dpxhuuRMPXWqh70TcxMq5EX4lbQLhwvTyzgvylKPa_VA1MIsZDKE-08yd-iA7cxRZL-wDKk2j0BaRxOvFwxfM9vc8X7yU-vcbm1zJ_kfrfvbYX6xlo4E6jcT6kRsQM7jQM0iQgcT0jetH67vXjyx87pqj_j_XrRQO3xnyNuqxifiyD_10ZyEFWx2_xD6QaoCv1gSVmOMnbA_qh2NbXgvoOkyyWLCL7HXAyWavxb3KLIoHhX4zwRQLKxyE'  // Country Select BG
       ];
 
